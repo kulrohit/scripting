@@ -10,7 +10,7 @@ $ec2-describe-instances --region <region> -O <AccessKEY>  -W <Secret key>
 Deleting instance using shell script 
 #!/bin/bash
 export AWS_CONFIG_FILE='AWS_CONFIG'  # keep your access key, secret key , region info here
-instance_id=$1  #Argument 1, which instance need to be deleted 
+instance_id=$3  #Argument 1, which instance need to be deleted 
 #check if any other volume is attached to instance
 vol=$(aws --profile $1  ec2 describe-volumes --region $2 --filters Name=attachment.instance-id,Values=${instance_id} | jq .Volumes[1].Attachments[0].VolumeId | sed 's/"//g')
 # check volume status,size or other info 
@@ -20,7 +20,7 @@ aws --profile $1 ec2 detach-volume --region $2 --volume-id ${vol}
 #delete dettached volume 
 aws --profile $1 ec2 delete-volume --region $2 --volume-id ${vol}
 #Change termination behavior of instance to terminate , If instance is protected from accidental termination, it wont delete untill behaviour is chaged 
-aws --profile $1 --region $2 ec2 modify-instance-attribute --instance-id ${instance_id} --disable-api-termination  "{\"Value\": false}"
+aws --profile $1 --region $1 ec2 modify-instance-attribute --instance-id ${instance_id} --disable-api-termination  "{\"Value\": false}"
 #Delet instance 
 aws --profile $1 --region $2 ec2 terminate-instances --instance-ids ${instance_id}
 
