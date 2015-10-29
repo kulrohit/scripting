@@ -25,4 +25,3 @@ aws --profile $1 --region $2 ec2 modify-instance-attribute --instance-id ${insta
 aws --profile $1 --region $2 ec2 terminate-instances --instance-ids ${instance_id}
 
 
-done
