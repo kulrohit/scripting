@@ -1,0 +1,72 @@
+#!/usr/bin/python
+
+import psycopg2
+import sys
+import collections
+import jprops
+import logging
+import os
+
+from datetime import datetime , timedelta
+
+#Date Calculations
+base=4
+baseago=datetime.now() - timedelta(days=base)
+
+current_day_summary=2
+current_day_summaryago=datetime.now() - timedelta(days=current_day_summary)
+
+daily_summary=30
+daily_summaryago=datetime.now() - timedelta(days=daily_summary)
+
+
+dict_tableTime = {}
+wte_trigger_activity_base="wte_trigger_activity_base"
+wte_trigger_activity_current_day_summary="wte_trigger_activity_current_day_summary"
+wte_trigger_activity_daily_summary="wte_trigger_activity_daily_summary"
+
+dict_tableTime[wte_trigger_activity_base] = baseago.strftime('%Y-%m-%d')
+dict_tableTime[wte_trigger_activity_current_day_summary] = current_day_summaryago.strftime('%Y-%m-%d')
+dict_tableTime[wte_trigger_activity_daily_summary] = daily_summaryago.strftime('%Y-%m-%d')
+
+
+for key,value in dict_tableTime.iteritems():
+    str1 = ('select * from %s where local_proc_date >= %s' % (key,value))
+    print str1
+    str2 = (' to s3://wfxnp-wte/prodredshift-backup/%s_ credentials aws_access_key_id=<XXXXXX>;aws_secret_access_key=<>XXXXXX manifest;' % key )
+
+    print str2
+    str = str1 + str2
+    #print str
+
+#Initialize logging
+logging.basicConfig(format='%(asctime)s  %(levelname)s unload.py  %(message)s', level=logging.INFO)
+def main(ifile):
+    logging.info("Using property file %s",ifile)
+    with open(ifile) as fp:
+        properties = jprops.load_properties(fp, collections.OrderedDict)
+        con = psycopg2.connect(host=properties['redshift.dbhost'], port=properties['redshift.port'], user=properties['redshift.username'], password=properties['redshift.password'], database=properties['redshift.db'])
+        logging.info("Connecting to DB using %s %s %s %s" ,properties['redshift.dbhost'],properties['redshift.port'],properties['redshift.username'],properties['redshift.db'])
+        con.set_isolation_level(psycopg2.extensions.ISOLATION_LEVEL_AUTOCOMMIT)
+        cur = con.cursor()
+        #schemaname = properties['redshift.dbschemaname'].split(",")
+        #tables = properties['redshift.tables'].split(",")
+        for i in str:
+            logging.info("unloading data from %s" %key)
+            try:
+                cur.execute("unload  %s;" %str)
+            except Exception as err:
+                logging.error(err)
+            logging.info("vacuum completed for table %s.%s" %(schema,table))
+    cur.close();
+
+if __name__ == "__main__":
+    if len(sys.argv) >= 2:
+        ifile = sys.argv[1]
+        if os.path.isfile(ifile) == False:
+            raise Exception('File specified does not exist.')
+        main(ifile)
+    else:
+        logging.error('Please specify file and date for folder.')
+        logging.error('Example: wtedbmaint.py <property file>')
+        sys.exit(0)	
