@@ -1,0 +1,74 @@
+#!/bin/bash
+## Variable declaration ###
+vg=oravg
+
+### Checking for any existing mount points of DB ###
+
+lvs | grep 'u01\|u04\|u03\|orabackup\|oraarchive'
+if [ $? -eq 0 ]; then
+ echo "########################################"
+ echo "                                        "
+ echo "required logical volumes already exist"
+ echo "                                         "
+ echo "##########################################"
+exit 95
+fi
+### Check to see if we have a 300GB disk ###
+ss=`fdisk -l | grep dev | grep 322.1`
+if [ $? -eq 0 ]
+then
+        ### Check to see if the 300GB is used in any volume group ###
+        pv=`pvs | grep 300.00g`
+        if [ $? -eq 1 ]
+        then
+                ### unmounting the previous /u02 and /oem mounts ###
+                umount /oem
+                umount /u02
+                lvremove -f /dev/mapper/rootvg-oemlv
+                lvremove -f /dev/mapper/appvg-u02lv
+                ### Getting the device name of the 300GB disk ###
+                device=`fdisk -l | grep dev | grep 322.1 | awk '{print $2}' |cut -d":" -f1`
+                ##create physical volume
+                pvcreate ${device}
+
+                ##create volume group
+                vgcreate oravg ${device}
+
+                ##Create Logical volume
+
+                lvcreate -L20G -n u01lv oravg
+                lvcreate -L20G -n u02lv oravg
+                lvcreate -L20G -n u03lv oravg
+                lvcreate -L20G -n u04lv oravg
+                lvcreate -L20G -n orabackuplv oravg
+                lvcreate -L20G -n oraarchivelv oravg
+                lvcreate -L10G -n oemlv oravg
+
+                ##Make filesystem
+
+                mkfs.ext4 /dev/mapper/oravg-u01lv
+                mkfs.ext4 /dev/mapper/oravg-u02lv
+                mkfs.ext4 /dev/mapper/oravg-u03lv
+                mkfs.ext4 /dev/mapper/oravg-u04lv
+                mkfs.ext4 /dev/mapper/oravg-orabackuplv
+                mkfs.ext4 /dev/mapper/oravg-oraarchivelv
+                mkfs.ext4 /dev/mapper/oravg-oemlv
+
+                mkdir -p {/u01,/u02,/u03,/u04,/oem,/orabackup,/oraarchive}
+                ##remove the existing entries for /u02 and /oem
+
+                sed –i '/u01/d'  /etc/fstab
+                sed –i '/oem/d' /etc/fstab
+
+                echo "/dev/mapper/oravg-u01lv /u01                                      ext4    defaults        1 2" >>/etc/fstab
+                echo "/dev/mapper/oravg-u02lv /u02                                      ext4    defaults        1 2" >>/etc/fstab
+                echo "/dev/mapper/oravg-u03lv /u03                                      ext4    defaults        1 2" >>/etc/fstab
+                echo "/dev/mapper/oravg-u04lv /u04                                      ext4    defaults        1 2" >>/etc/fstab
+                echo "/dev/mapper/orabackupvg-orabackuplv /orabackup            ext4    defaults        1 2" >>/etc/fstab
+                echo "/dev/mapper/oraarchive-oraarchivelv /oraarchive           ext4    defaults        1 2" >>/etc/fstab
+                echo "/dev/mapper/oravg-oemlv /oem                                      ext4    defaults        1 2" >>/etc/fstab
+
+                mount -a
+                chown -R root:dba /oem
+        fi
+fi 
