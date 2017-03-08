@@ -18,3 +18,9 @@ Replace sequences of the same characters with a single character
 An elegant way to rename all files in a directory to lowercase names
 #for i in `ls -1`; do mv $i "${i,,}" ; done
 
+Find country wise IP Address 
+http://www.nirsoft.net/countryip/in.html
+
+Generate CIDR from IP Arange 
+cat india  | awk '{print $1 " " $2}' | while read source dest ; do  python -c "import netaddr;cidrs = netaddr.iprange_to_cidrs('$source','$dest'); print cidrs;"; done
+
