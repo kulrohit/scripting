@@ -1,0 +1,26 @@
+Date:
+Print last month 
+#date +'%m' -d 'last month'
+Print 30 days old date 
+#date '+%Y-%m-%d' -d "-30 days"
+Generate a sequence of numbers
+#echo {01..10}
+
+Find recent logs that contain the string "Exception"
+#find . -name '*.log' -mtime -2 -exec grep -Hc Exception {} \; | grep -v :0$
+
+Converts DD/MM/YYYY date format to ISO-8601 (YYYY-MM-DD)
+#sed 's_\([0-9]\{1,2\}\)/\([0-9]\{1,2\}\)/\([0-9]\{4\}\)_\3-\2-\1_g'
+
+Replace sequences of the same characters with a single character
+#echo heeeeeeelllo | sed 's/\(.\)\1\+/\1/g'
+
+An elegant way to rename all files in a directory to lowercase names
+#for i in `ls -1`; do mv $i "${i,,}" ; done
+
+Find country wise IP Address 
+http://www.nirsoft.net/countryip/in.html
+
+Generate CIDR from IP Arange 
+cat india  | awk '{print $1 " " $2}' | while read source dest ; do  python -c "import netaddr;cidrs = netaddr.iprange_to_cidrs('$source','$dest'); print cidrs;"; done
+

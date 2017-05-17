@@ -1,0 +1,29 @@
+#!/bin/bash
+cd /opt/deploy 
+source ./redshift_refresh #The file contains information such as table name, usename,password,port,aws secret ,aws key etc etc 
+schema=$1
+export PGPASSWORD=<database password>
+psql -h ${HOST}  -U ${USERNAME} -p ${PORT} -d ${DATABASE_NAME} <<EOF
+set search_path to ${schema};
+delete  from <table name>;
+delete  from <table name>;
+delete  from <table name>;
+delete  from <table name>;
+delete  from <table name>;
+copy  <table name>
+from 's3://<bucketname>/<s3path>/<tablename>_manifest'
+credentials 'aws_access_key_id=${ACCESS};aws_secret_access_key=${SECRET}'
+manifest;
+copy <table name>;
+from 's3://<bucketname>/<s3path>/<tablename>_manifest'
+credentials 'aws_access_key_id=${ACCESS};aws_secret_access_key=${SECRET}'
+manifest;
+copy <table name>;
+from 's3://<bucketname>/<s3path>/<tablename>_manifest'
+credentials 'aws_access_key_id=${ACCESS};aws_secret_access_key=${SECRET}'
+manifest;
+copy <table name>;
+from 's3://<bucketname>/<s3path>/<tablename>_manifest'
+credentials 'aws_access_key_id=${ACCESS};aws_secret_access_key=${SECRET}'
+manifest;
+EOF

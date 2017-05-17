@@ -33,7 +33,7 @@ dict_tableTime[wte_trigger_activity_daily_summary] = daily_summaryago.strftime('
 for key,value in dict_tableTime.iteritems():
     str1 = ('select * from %s where local_proc_date >= %s' % (key,value))
     print str1
-    str2 = (' to s3://wfxnp-wte/prodredshift-backup/%s_ credentials aws_access_key_id=<XXXXXX>;aws_secret_access_key=<>XXXXXX manifest;' % key )
+    str2 = (' to s3://<bucket>/<S3path>/%s_ credentials aws_access_key_id=<XXXXXX>;aws_secret_access_key=<>XXXXXX manifest;' % key )
 
     print str2
     str = str1 + str2
