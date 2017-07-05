@@ -23,5 +23,12 @@ aws --profile $1 ec2 delete-volume --region $2 --volume-id ${vol}
 aws --profile $1 --region $1 ec2 modify-instance-attribute --instance-id ${instance_id} --disable-api-termination  "{\"Value\": false}"
 #Delet instance 
 aws --profile $1 --region $2 ec2 terminate-instances --instance-ids ${instance_id}
-
+# AWS Cloudwatch CLI 
+aws cloudwatch get-metric-statistics --namespace AWS/RDS  --metric-name ${metric} --start-time ${STARTTIME} --end-time ${ENDTIME} --period 600  --statistics Average --region us-east-1 --output text | tail -1 | awk '{printf("%d\n",$2 + 0.5)}')
+--namespace e.g AWS/RDS,AWS/Redshift,AWS/EC2 etc 
+--metrics-name get list from aws cloudwatch , specific names for specific services 
+--start-time --endtime are required, 
+--region is mandatory 
+STARTTIME=`date -d "-15 minutes" "+%Y-%m-%dT%H:%M:%SZ"`
+ENDTIME=`date -d "-5 minutes" "+%Y-%m-%dT%H:%M:%SZ"`
 
