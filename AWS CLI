@@ -32,3 +32,37 @@ aws cloudwatch get-metric-statistics --namespace AWS/RDS  --metric-name ${metric
 STARTTIME=`date -d "-15 minutes" "+%Y-%m-%dT%H:%M:%SZ"`
 ENDTIME=`date -d "-5 minutes" "+%Y-%m-%dT%H:%M:%SZ"`
 
+
+
+##Run chef receipe from remote 
+You could use knife ssh to run chef-client on all boxes that contain a certain role or recipe:
+
+knife ssh "role:web" "sudo chef-client" -x ubuntu --sudo 
+
+Or if you're in EC2:
+
+knife ssh "role:web" "sudo chef-client" -x ubuntu -a ec2.public_hostname 
+
+
+knife ssh name:mynode -a ipaddress  -x ubuntu -i mycredentials.pem "sudo chef-client"You could use knife ssh to run chef-client on all boxes that contain a certain role or recipe:
+
+##Bootstrap Remote node
+
+knife bootstrap new-host-ip -x root -P password -N node_name
+
+
+#To add a role or recipe to a node
+knife node run_list add node_name "recipe[cookbook::recipe]"
+knife node run_list add node_name "role[role_name]"
+knife node run_list add node_name "role[role_name],recipe[cookbook::recipe]"
+
+##Given a hostname pattern of 'host-<company>-<hostclass>-<index>' (i.e. host-apple-puppet-0) write a custom fact that extracts the <company> value and assigns it to the variable 'company' in facter.
+
+ANS 
+======
+Facter.add("comapny") do
+   setcode do
+        Facter::Util::Resolution.exec('hostname | cut -d"-" -f2')
+   end
+end
+=======
