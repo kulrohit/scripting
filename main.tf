@@ -4,21 +4,58 @@ provider "aws" {
     region = "${var.aws_region}"
 }
 
+
+
 ################# VPC Created #############################################
 resource "aws_vpc" "default" {
-    cidr_block = "${var.vpc_cidr}"
+#    cidr_block = "${var.vpc_cidr}"
+     cidr_block = "172.31.1.0/24"
+#    cidr_block = "${aws_vpc.default.id}"
+   assign_generated_ipv6_cidr_block = false
     enable_dns_hostnames = true
     tags {
-        Name = "aws-vpc-created"
+        Name = "terraform-aws-vpc-created"
     }
 }
 
+################# Internet Gateway #######################################
 resource "aws_internet_gateway" "default" {
     vpc_id = "${aws_vpc.default.id}"
 }
 
-################# Security groups for NAT #############################################
-resource "aws_security_group" "nat_security_group" {
+
+################# AWS Subnet #############################################
+
+resource "aws_subnet" "ap-southeast-1-private" {
+    vpc_id = "${aws_vpc.default.id}"
+
+    cidr_block = "172.31.1.0/24"
+    availability_zone = "ap-southeast-1a"
+
+    tags {
+        Name = "Private Subnet"
+    }
+}
+
+########################## Route add ######################################
+#resource "aws_route_table" "r" {
+#  vpc_id = "${aws_vpc.default.id}"
+
+#  route {
+#    cidr_block = "0.0.0.0/0"
+#    gateway_id = "${aws_internet_gateway.default.id}"
+#  }
+
+  
+
+#  tags {
+#    Name = "main"
+#  }
+#}
+
+
+###################Security Group##############################
+resource "aws_security_group" "nat" {
     name = "vpc_nat"
     description = "Allow traffic to pass from the private subnet to the internet"
 
@@ -75,18 +112,8 @@ resource "aws_security_group" "nat_security_group" {
     vpc_id = "${aws_vpc.default.id}"
 
     tags {
-        Name = "NATSecurity_Group"
+        Name = "NATSG"
     }
-}
-
-################# AWS Subnet #############################################
-resource "aws_subnet" "default" {
-  vpc_id                  = "${aws_vpc.default.id}"
-  cidr_block              = "10.0.1.0/24"
-  map_public_ip_on_launch = true
-  tags = {
-    Name =  "Subnet private for Terraform VPC"
-  }
 }
 
 
@@ -113,65 +140,54 @@ resource "aws_security_group" "elb" {
   }
 }
 
-################# AWS ELB #############################################
+################# Security Group for ELB #############################################
 resource "aws_elb" "web" {
-  name = "terraform-example-elb"
+  name = "elb-aws-with-terraform"
 
-  subnets         = ["${aws_subnet.default.id}"]
+  subnets         = ["${aws_subnet.ap-southeast-1-private.id}"]
   security_groups = ["${aws_security_group.elb.id}"]
-  instances       = ["${aws_instance.ec2.id}"]
+  instances       = ["${aws_instance.nat.*.id}"]
 
   listener {
     instance_port     = 80
     instance_protocol = "http"
     lb_port           = 80
     lb_protocol       = "http"
+
   }
 }
+
 
 ################# Key Pair Authentication #############################################
 resource "aws_key_pair" "auth" {
-  key_name   = "pdx"
+  key_name   = "cb-demo"
   public_key = "${file(var.aws_key_path)}"
 }
 
-################# EC2 Instance Creation #############################################
-resource "aws_instance" "ec2" {
-  connection {
-    user = "ec2-user"
-  }
 
-  instance_type = "t1.micro"
-  ami = "${lookup(var.amis, var.aws_region)}"
-  key_name = "${aws_key_pair.auth.id}"
-  vpc_security_group_ids = ["${aws_security_group.elb.id}"]
-  subnet_id = "${aws_subnet.default.id}"
+##################### Instance creation #################################################
 
-   root_block_device {
-    volume_type           = "gp2"
-    volume_size           = 10
-    delete_on_termination = true
-}
-     tags {
-        Name = "Terraform-AWS-Instance-Created"
+resource "aws_instance" "nat" {
+    ami = "ami-011dc062" # this is a special ami preconfigured to do NAT
+    availability_zone = "ap-southeast-1a"
+    instance_type = "t2.micro"
+    key_name = "${aws_key_pair.auth.id}"
+    vpc_security_group_ids = ["${aws_security_group.nat.id}"]
+    subnet_id = "${aws_subnet.ap-southeast-1-private.id}"
+    associate_public_ip_address = true
+    source_dest_check = false
+    count = 2
+
+    tags {
+        Name = "Terraform_instance"
     }
-  
-
 }
 
 ################# Output #############################################
 
 
 output "Instance_Created" {
-  value = "Instance: ${element(aws_instance.ec2.*.id, 0)}"
+  value = "Instance: ${element(aws_instance.nat.*.id, 0)}"
 }
 
 
-################# Extra Code #############################################
-#resource "aws_instance" "ec2" {
-#  ami                         = "${lookup(var.amis, var.aws_region)}"
-#  instance_type               = "t1.micro"
-#  subnet_id                   = "${aws_subnet.default.id}"
-#  associate_public_ip_address = true
-#  private_ip                  = "10.0.28.150"
-#}
