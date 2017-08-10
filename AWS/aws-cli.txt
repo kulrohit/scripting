@@ -66,3 +66,17 @@ Facter.add("comapny") do
    end
 end
 =======
+
+List available volumes 
+============
+for region in  us-east-2 us-east-1	us-west-1 us-west-2	ap-south-1 ap-northeast-2 ap-southeast-1 ap-southeast-2 ap-northeast-1 ca-central-1 eu-central-1 eu-west-1	eu-west-2	
+do 
+aws --profile wfx-nonprod --region $region ec2 describe-volumes --filters Name=status,Values=available --output text
+done 
+=========
+
+Volume : 
+For i in  vol-a1e9e9ef vol-3c0aa1db vol-c983522f vol-ff825319 vol-88f74a8d vol-c2f74ac7 vol-ebc866f9 vol-58c6fb4a vol-9e803f5f vol-14803fd5 vol-3f8e323e vol-b58e32b4 vol-53f4c842 vol-69ddbf79 vol-3e82d7ca vol-f58dd801 ; do aws --region us-west-2 ec2 delete-volume --volume-id  $i ; done 
+
+Snapshot :
+for i in snap-01cdbc8b snap-01cdbc8b snap-056b2e9c snap-046b2e9d snap-0bbd21fb snap-01cdbc8b snap-01cdbc8b snap-056b2e9c snap-046b2e9d snap-0bbd21fb snap-01cdbc8b snap-01cdbc8b snap-056b2e9c snap-046b2e9d ; do aws --profile wfx-nonprod  ec2 --region us-west-2  delete-snapshot --snapshot-id $i 
