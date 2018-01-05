@@ -80,3 +80,11 @@ For i in  vol-a1e9e9ef vol-3c0aa1db vol-c983522f vol-ff825319 vol-88f74a8d vol-c
 
 Snapshot :
 for i in snap-01cdbc8b snap-01cdbc8b snap-056b2e9c snap-046b2e9d snap-0bbd21fb snap-01cdbc8b snap-01cdbc8b snap-056b2e9c snap-046b2e9d snap-0bbd21fb snap-01cdbc8b snap-01cdbc8b snap-056b2e9c snap-046b2e9d ; do aws --profile wfx-nonprod  ec2 --region us-west-2  delete-snapshot --snapshot-id $i 
+
+#Instance ID
+aws --profile wfx-nonprod ec2 describe-instances --query 'Reservations[].Instances[].[InstanceId,Tags[?Key==`Name`].Value[]]' --output text |sed '$!N;s/\n/ /' |
+
+#Create Image
+aws --profile wfx-nonprod ec2 create-image --instance-id VPN_Dev_East_Puppet --name VPN_Dev_East_Puppet_20171212 --description 'A Backup AMI for VPN_Dev_East_Puppet on date 20171212' --region=us-east-1 --no-reboot
+
+

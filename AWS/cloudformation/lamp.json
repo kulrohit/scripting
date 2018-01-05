@@ -1,0 +1,29 @@
+{
+  "Resources" :
+  {
+    "WebServer":{
+
+      "Type": "AWS::EC2::Instance",
+      "Properties":{
+        "ImageId" : "ami-9a7724c8",
+        "KeyName" : "demo",
+        "InstanceType":"t1.micro",
+        "SecurityGroups" : [ "demo" ],
+        "UserData" : {"Fn::Base64" : {"Fn::Join" : ["", [
+          "#!/bin/bash\n",
+          "# Launching Instance",
+          "apt-get -y install apache2 \n",
+          "apt-get -y install mysql \n",
+          "apt-get -y install mysql-server \n",
+          "apt-get -y install php php5-mysql \n"
+        ] ] } }
+      }
+    }
+  },
+  "Outputs":{
+    "WebsiteURL" : {
+      "Value" : { "Fn::Join" : ["", ["http://", { "Fn::GetAtt" : [        "WebServer", "PublicDnsName" ]}]] },
+      "Description" : "URL for newly created LAMP stack"
+    }
+  }
+}
